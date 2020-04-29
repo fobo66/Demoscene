@@ -1,5 +1,6 @@
 package io.github.fobo66.demoscene
 
+import android.content.res.Resources
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
@@ -11,7 +12,10 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 
-class DemoGLRenderer : GLSurfaceView.Renderer {
+class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
+
+    private lateinit var fragmentShader: String
+    private lateinit var vertexShader: String
 
     private var colorHandle: Int = 0
     private var positionHandle: Int = 0
@@ -78,6 +82,14 @@ class DemoGLRenderer : GLSurfaceView.Renderer {
 
 
         triangle1Vertices.put(triangle1VerticesData).position(0)
+
+        resources.openRawResource(R.raw.vertex_shader).use {
+            vertexShader = it.bufferedReader().readText()
+        }
+
+        resources.openRawResource(R.raw.fragment_shader).use {
+            fragmentShader = it.bufferedReader().readText()
+        }
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -137,28 +149,6 @@ class DemoGLRenderer : GLSurfaceView.Renderer {
         // NOTE: In OpenGL 1, a ModelView matrix is used, which is a combination of a model and
         // view matrix. In OpenGL 2, we can keep track of these matrices separately if we choose.
         Matrix.setLookAtM(viewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ)
-
-        val vertexShader =
-            """uniform mat4 u_MVPMatrix;      
-            attribute vec4 a_Position;     
-            attribute vec4 a_Color;        
-            varying vec4 v_Color;          
-            void main()                    
-            {                              
-               v_Color = a_Color;          
-               gl_Position = u_MVPMatrix   
-                           * a_Position;   
-            }                              
-    """.trimMargin()
-
-        val fragmentShader =
-            """precision mediump float;       
-        varying vec4 v_Color;          
-        void main()                    
-        {                              
-           gl_FragColor = v_Color;     
-        }                              
-    """.trimMargin()
 
         var vertexShaderHandle = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER)
 

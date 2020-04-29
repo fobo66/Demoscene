@@ -12,7 +12,8 @@ class DemoSurfaceView(context: Context): GLSurfaceView(context) {
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2)
 
-        renderer = DemoGLRenderer()
+
+        renderer = DemoGLRenderer(context.resources)
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)
