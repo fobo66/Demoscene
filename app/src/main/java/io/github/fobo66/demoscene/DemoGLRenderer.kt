@@ -264,6 +264,8 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
 
             // If the compilation failed, delete the shader.
             if (compileStatus[0] == 0) {
+                val infoLog = GLES20.glGetShaderInfoLog(handle)
+                Timber.e("Failed to compile shader. Info log: %s", infoLog)
                 GLES20.glDeleteShader(handle)
                 handle = 0
             }
