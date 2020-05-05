@@ -20,6 +20,7 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
     private var colorHandle: Int = 0
     private var positionHandle: Int = 0
     private var mvpMatrixHandle: Int = 0
+    private var timeHandle: Int = 0
 
     /**
      * Store the model matrix. This matrix is used to move models from object space (where each model can be thought
@@ -65,10 +66,10 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         val triangle1VerticesData: FloatArray = floatArrayOf(
             // X, Y, Z,
             // R, G, B, A
-            -0.5f, -0.25f, 0.0f,
+            -0.5987875f, -0.25f, 0.0f,
             1.0f, 0.0f, 0.0f, 1.0f,
 
-            0.5f, -0.25f, 0.0f,
+            0.5f, -0.25765f, 0.0f,
             0.0f, 0.0f, 1.0f, 1.0f,
 
             0.0f, 0.559016994f, 0.0f,
@@ -232,11 +233,12 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         }
 
         if (programHandle == 0) {
-            throw java.lang.RuntimeException("Error creating program.")
+            throw RuntimeException("Error creating program.")
         }
 
         // Set program handles. These will later be used to pass in values to the program.
         mvpMatrixHandle = GLES20.glGetUniformLocation(programHandle, "u_MVPMatrix")
+        timeHandle = GLES20.glGetUniformLocation(programHandle, "u_Time")
         positionHandle = GLES20.glGetAttribLocation(programHandle, "a_Position")
         colorHandle = GLES20.glGetAttribLocation(programHandle, "a_Color")
 
@@ -275,6 +277,7 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         // (which now contains model * view * projection).
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvpMatrix, 0)
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
+        GLES20.glUniform1f(timeHandle, SystemClock.uptimeMillis().toFloat())
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3)
     }
 }
