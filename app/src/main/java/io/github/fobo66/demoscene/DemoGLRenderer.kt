@@ -153,52 +153,15 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         // view matrix. In OpenGL 2, we can keep track of these matrices separately if we choose.
         Matrix.setLookAtM(viewMatrix, 0, eyeX, eyeY, eyeZ, lookX, lookY, lookZ, upX, upY, upZ)
 
-        var vertexShaderHandle = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER)
-
-        if (vertexShaderHandle != 0) {
-            // Pass in the shader source.
-            GLES20.glShaderSource(vertexShaderHandle, vertexShader)
-
-            // Compile the shader.
-            GLES20.glCompileShader(vertexShaderHandle)
-
-            // Get the compilation status.
-            val compileStatus = IntArray(1)
-            GLES20.glGetShaderiv(vertexShaderHandle, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
-
-            // If the compilation failed, delete the shader.
-            if (compileStatus[0] == 0) {
-                GLES20.glDeleteShader(vertexShaderHandle)
-                vertexShaderHandle = 0
-            }
-        }
+        // Load in the vertex shader.
+        val vertexShaderHandle = loadShader(GLES20.GL_VERTEX_SHADER, vertexShader)
 
         if (vertexShaderHandle == 0) {
             throw RuntimeException("Failed to create vertex shader")
         }
 
-        // Load in the fragment shader shader.
-
-        // Load in the fragment shader shader.
-        var fragmentShaderHandle = GLES20.glCreateShader(GLES20.GL_FRAGMENT_SHADER)
-
-        if (fragmentShaderHandle != 0) {
-            // Pass in the shader source.
-            GLES20.glShaderSource(fragmentShaderHandle, fragmentShader)
-
-            // Compile the shader.
-            GLES20.glCompileShader(fragmentShaderHandle)
-
-            // Get the compilation status.
-            val compileStatus = IntArray(1)
-            GLES20.glGetShaderiv(fragmentShaderHandle, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
-
-            // If the compilation failed, delete the shader.
-            if (compileStatus[0] == 0) {
-                GLES20.glDeleteShader(fragmentShaderHandle)
-                fragmentShaderHandle = 0
-            }
-        }
+        // Load in the fragment shader.
+        val fragmentShaderHandle = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
 
         if (fragmentShaderHandle == 0) {
             throw java.lang.RuntimeException("Error creating fragment shader.")
