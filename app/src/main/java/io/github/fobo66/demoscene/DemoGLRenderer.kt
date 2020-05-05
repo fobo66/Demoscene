@@ -2,9 +2,11 @@ package io.github.fobo66.demoscene
 
 import android.content.res.Resources
 import android.opengl.GLES20
+import android.opengl.GLES20.GL_FALSE
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
+import timber.log.Timber
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -226,7 +228,9 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
             GLES20.glGetProgramiv(programHandle, GLES20.GL_LINK_STATUS, linkStatus, 0)
 
             // If the link failed, delete the program.
-            if (linkStatus[0] == 0) {
+            if (linkStatus[0] == GL_FALSE) {
+                val infoLog = GLES20.glGetProgramInfoLog(programHandle)
+                Timber.e("Failed to link OpenGL program. Info log: %s", infoLog)
                 GLES20.glDeleteProgram(programHandle)
                 programHandle = 0
             }
@@ -279,5 +283,29 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
         GLES20.glUniform1f(timeHandle, SystemClock.uptimeMillis().toFloat())
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3)
+    }
+
+    private fun loadShader(type: Int, shaderCode: String): Int {
+        var handle = GLES20.glCreateShader(type)
+
+        if (handle != 0) {
+            // Pass in the shader source.
+            GLES20.glShaderSource(handle, shaderCode)
+
+            // Compile the shader.
+            GLES20.glCompileShader(handle)
+
+            // Get the compilation status.
+            val compileStatus = IntArray(1)
+            GLES20.glGetShaderiv(handle, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
+
+            // If the compilation failed, delete the shader.
+            if (compileStatus[0] == 0) {
+                GLES20.glDeleteShader(handle)
+                handle = 0
+            }
+        }
+
+        return handle
     }
 }
