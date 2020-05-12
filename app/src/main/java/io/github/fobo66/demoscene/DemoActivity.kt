@@ -25,7 +25,6 @@ class DemoActivity : AppCompatActivity() {
         glSurfaceView = DemoSurfaceView(this)
 
         setContentView(glSurfaceView)
-        glSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
     }
 
     override fun onStart() {

@@ -99,12 +99,8 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT or GLES20.GL_COLOR_BUFFER_BIT)
 
         // Do a complete rotation every 10 seconds.
-
-        // Do a complete rotation every 10 seconds.
         val time = SystemClock.uptimeMillis() % 10000L
         val angleInDegrees = 360.0f / 10000.0f * time.toInt()
-
-        // Draw the triangle facing straight on.
 
         // Draw the triangle facing straight on.
         Matrix.setIdentityM(modelMatrix, 0)
