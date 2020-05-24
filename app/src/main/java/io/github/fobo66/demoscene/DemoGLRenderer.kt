@@ -18,11 +18,19 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
 
     private lateinit var fragmentShader: String
     private lateinit var vertexShader: String
+    private lateinit var pointFragmentShader: String
+    private lateinit var pointVertexShader: String
 
     private var colorHandle: Int = 0
     private var positionHandle: Int = 0
     private var mvpMatrixHandle: Int = 0
+    private var mvMatrixHandle: Int = 0
+    private var lightPosHandle: Int = 0
+    private var normalHandle: Int = 0
     private var timeHandle: Int = 0
+
+    private var perVertexProgramHandle = 0
+    private var pointProgramHandle = 0
 
     /**
      * Store the model matrix. This matrix is used to move models from object space (where each model can be thought
@@ -36,6 +44,11 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
      */
     private val viewMatrix = FloatArray(16)
 
+    /**
+     * Stores a copy of the model matrix specifically for the light position.
+     */
+    private val lightModelMatrix = FloatArray(16)
+
     /** Store the projection matrix. This is used to project the scene onto a 2D viewport.  */
     private val projectionMatrix = FloatArray(16)
 
@@ -43,7 +56,9 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
     private val mvpMatrix = FloatArray(16)
 
     /** Store our model data in a float buffer.  */
-    private val triangle1Vertices: FloatBuffer
+    private val cubePositions: FloatBuffer
+    private val cubeColors: FloatBuffer
+    private val cubeNormals: FloatBuffer
 
     /** How many bytes per float.  */
     private val mBytesPerFloat = 4
@@ -63,28 +78,168 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
     /** Size of the color data in elements.  */
     private val mColorDataSize = 4
 
+    /** Size of the normal data in elements. */
+    private val normalDataSize = 3
+
+    /** Used to hold a light centered on the origin in model space. We need a 4th coordinate so we can get translations to work when
+     *  we multiply this by our transformation matrices. */
+    private val lightPosInModelSpace = floatArrayOf(0.0f, 0.0f, 0.0f, 1.0f)
+
+    /** Used to hold the current position of the light in world space (after transformation via model matrix) */
+    private val lightPosInWorldSpace = FloatArray(4)
+
+    /** Used to hold the transformed position of the light in eye space (after transformation via modelview matrix) */
+    private val lightPosInEyeSpace = FloatArray(4)
+
     init {
-        // This triangle is red, green, and blue.
-        val triangle1VerticesData: FloatArray = floatArrayOf(
-            // X, Y, Z,
-            // R, G, B, A
-            -0.5987875f, -0.25f, 0.0f,
+        val cubePositionData =
+            floatArrayOf( // In OpenGL counter-clockwise winding is default. This means that when we look at a triangle,
+                // if the points are counter-clockwise we are looking at the "front". If not we are looking at
+                // the back. OpenGL has an optimization where all back-facing triangles are culled, since they
+                // usually represent the backside of an object and aren't visible anyways.
+                // Front face
+                -1.0f, 1.0f, 1.0f,
+                -1.0f, -1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                -1.0f, -1.0f, 1.0f,
+                1.0f, -1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,  // Right face
+                1.0f, 1.0f, 1.0f,
+                1.0f, -1.0f, 1.0f,
+                1.0f, 1.0f, -1.0f,
+                1.0f, -1.0f, 1.0f,
+                1.0f, -1.0f, -1.0f,
+                1.0f, 1.0f, -1.0f,  // Back face
+                1.0f, 1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                -1.0f, 1.0f, -1.0f,
+                1.0f, -1.0f, -1.0f,
+                -1.0f, -1.0f, -1.0f,
+                -1.0f, 1.0f, -1.0f,  // Left face
+                -1.0f, 1.0f, -1.0f,
+                -1.0f, -1.0f, -1.0f,
+                -1.0f, 1.0f, 1.0f,
+                -1.0f, -1.0f, -1.0f,
+                -1.0f, -1.0f, 1.0f,
+                -1.0f, 1.0f, 1.0f,  // Top face
+                -1.0f, 1.0f, -1.0f,
+                -1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, -1.0f,
+                -1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, -1.0f,  // Bottom face
+                1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, 1.0f,
+                -1.0f, -1.0f, -1.0f,
+                1.0f, -1.0f, 1.0f,
+                -1.0f, -1.0f, 1.0f,
+                -1.0f, -1.0f, -1.0f
+            )
+
+        // R, G, B, A
+
+        // R, G, B, A
+        val cubeColorData = floatArrayOf( // Front face (red)
             1.0f, 0.0f, 0.0f, 1.0f,
-
-            0.5f, -0.25765f, 0.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,  // Right face (green)
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,  // Back face (blue)
             0.0f, 0.0f, 1.0f, 1.0f,
-
-            0.0f, 0.559016994f, 0.0f,
-            0.0f, 1.0f, 0.0f, 1.0f
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,  // Left face (yellow)
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,  // Top face (cyan)
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,  // Bottom face (magenta)
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f
         )
 
+        // X, Y, Z
+        // The normal is used in light calculations and is a vector which points
+        // orthogonal to the plane of the surface. For a cube model, the normals
+        // should be orthogonal to the points of each face.
+
+        // X, Y, Z
+        // The normal is used in light calculations and is a vector which points
+        // orthogonal to the plane of the surface. For a cube model, the normals
+        // should be orthogonal to the points of each face.
+        val cubeNormalData = floatArrayOf( // Front face
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,
+            0.0f, 0.0f, 1.0f,  // Right face
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,
+            1.0f, 0.0f, 0.0f,  // Back face
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f,  // Left face
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,
+            -1.0f, 0.0f, 0.0f,  // Top face
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f,  // Bottom face
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f,
+            0.0f, -1.0f, 0.0f
+        )
 
         // Initialize the buffers.
-        triangle1Vertices = ByteBuffer.allocateDirect(triangle1VerticesData.size * mBytesPerFloat)
+
+        // Initialize the buffers.
+        cubePositions = ByteBuffer.allocateDirect(cubePositionData.size * mBytesPerFloat)
             .order(ByteOrder.nativeOrder()).asFloatBuffer()
+        cubePositions.put(cubePositionData).position(0)
 
+        cubeColors = ByteBuffer.allocateDirect(cubeColorData.size * mBytesPerFloat)
+            .order(ByteOrder.nativeOrder()).asFloatBuffer()
+        cubeColors.put(cubeColorData).position(0)
 
-        triangle1Vertices.put(triangle1VerticesData).position(0)
+        cubeNormals = ByteBuffer.allocateDirect(cubeNormalData.size * mBytesPerFloat)
+            .order(ByteOrder.nativeOrder()).asFloatBuffer()
+        cubeNormals.put(cubeNormalData).position(0)
 
         resources.openRawResource(R.raw.vertex_shader).use {
             vertexShader = it.bufferedReader().readText()
@@ -92,6 +247,14 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
 
         resources.openRawResource(R.raw.fragment_shader).use {
             fragmentShader = it.bufferedReader().readText()
+        }
+
+        resources.openRawResource(R.raw.point_vertex_shader).use {
+            pointVertexShader = it.bufferedReader().readText()
+        }
+
+        resources.openRawResource(R.raw.point_fragment_shader).use {
+            pointFragmentShader = it.bufferedReader().readText()
         }
     }
 
@@ -102,10 +265,35 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         val time = SystemClock.uptimeMillis() % 10000L
         val angleInDegrees = 360.0f / 10000.0f * time.toInt()
 
+        GLES20.glUseProgram(perVertexProgramHandle)
+
+        // Set program handles. These will later be used to pass in values to the program.
+        mvpMatrixHandle = GLES20.glGetUniformLocation(perVertexProgramHandle, "u_MVPMatrix")
+        mvMatrixHandle = GLES20.glGetUniformLocation(perVertexProgramHandle, "u_MVMatrix")
+        lightPosHandle = GLES20.glGetUniformLocation(perVertexProgramHandle, "u_LightPos")
+        timeHandle = GLES20.glGetUniformLocation(perVertexProgramHandle, "u_Time")
+        positionHandle = GLES20.glGetAttribLocation(perVertexProgramHandle, "a_Position")
+        colorHandle = GLES20.glGetAttribLocation(perVertexProgramHandle, "a_Color")
+        normalHandle = GLES20.glGetAttribLocation(perVertexProgramHandle, "a_Normal")
+
+        // Calculate position of the light. Rotate and then push into the distance.
+        Matrix.setIdentityM(lightModelMatrix, 0)
+        Matrix.translateM(lightModelMatrix, 0, 0.0f, 0.0f, -5.0f)
+        Matrix.rotateM(lightModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f)
+        Matrix.translateM(lightModelMatrix, 0, 0.0f, 0.0f, 2.0f)
+
+        Matrix.multiplyMV(lightPosInWorldSpace, 0, lightModelMatrix, 0, lightPosInModelSpace, 0)
+        Matrix.multiplyMV(lightPosInEyeSpace, 0, viewMatrix, 0, lightPosInWorldSpace, 0)
+
         // Draw the triangle facing straight on.
         Matrix.setIdentityM(modelMatrix, 0)
+        Matrix.translateM(modelMatrix, 0, 4.0f, 0.0f, -7.0f)
         Matrix.rotateM(modelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f)
-        drawTriangle(triangle1Vertices)
+        drawCube()
+
+        // Draw a point to indicate the light.
+        GLES20.glUseProgram(pointProgramHandle)
+        drawLight()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -114,8 +302,6 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         // Create a new perspective projection matrix. The height will stay the same
         // while the width will vary as per aspect ratio.
 
-        // Create a new perspective projection matrix. The height will stay the same
-        // while the width will vary as per aspect ratio.
         val ratio = width.toFloat() / height
         val left = -ratio
         val bottom = -1.0f
@@ -129,10 +315,16 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
+        // Use culling to remove back faces.
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+
+        // Enable depth testing
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+
         // Position the eye behind the origin.
         val eyeX = 0.0f
         val eyeY = 0.0f
-        val eyeZ = 1.5f
+        val eyeZ = -0.5f
 
         // We are looking toward the distance
         val lookX = 0.0f
@@ -160,89 +352,120 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         val fragmentShaderHandle = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
 
         if (fragmentShaderHandle == 0) {
-            throw java.lang.RuntimeException("Error creating fragment shader.")
+            throw RuntimeException("Error creating fragment shader.")
         }
 
-        // Create a program object and store the handle to it.
+        perVertexProgramHandle = createAndLinkProgram(
+            vertexShaderHandle,
+            fragmentShaderHandle,
+            arrayOf("a_Position", "a_Color", "a_Normal")
+        )
 
-        // Create a program object and store the handle to it.
-        var programHandle = GLES20.glCreateProgram()
+        val pointVertexShaderHandle = loadShader(GLES20.GL_VERTEX_SHADER, vertexShader)
 
-        if (programHandle != 0) {
-            // Bind the vertex shader to the program.
-            GLES20.glAttachShader(programHandle, vertexShaderHandle)
-
-            // Bind the fragment shader to the program.
-            GLES20.glAttachShader(programHandle, fragmentShaderHandle)
-
-            // Bind attributes
-            GLES20.glBindAttribLocation(programHandle, 0, "a_Position")
-            GLES20.glBindAttribLocation(programHandle, 1, "a_Color")
-
-            // Link the two shaders together into a program.
-            GLES20.glLinkProgram(programHandle)
-
-            // Get the link status.
-            val linkStatus = IntArray(1)
-            GLES20.glGetProgramiv(programHandle, GLES20.GL_LINK_STATUS, linkStatus, 0)
-
-            // If the link failed, delete the program.
-            if (linkStatus[0] == GL_FALSE) {
-                val infoLog = GLES20.glGetProgramInfoLog(programHandle)
-                Timber.e("Failed to link OpenGL program. Info log: %s", infoLog)
-                GLES20.glDeleteProgram(programHandle)
-                programHandle = 0
-            }
+        if (pointVertexShaderHandle == 0) {
+            throw RuntimeException("Failed to create vertex shader")
         }
 
-        if (programHandle == 0) {
-            throw RuntimeException("Error creating program.")
+        val pointFragmentShaderHandle = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
+
+        if (pointFragmentShaderHandle == 0) {
+            throw RuntimeException("Error creating fragment shader.")
         }
 
-        // Set program handles. These will later be used to pass in values to the program.
-        mvpMatrixHandle = GLES20.glGetUniformLocation(programHandle, "u_MVPMatrix")
-        timeHandle = GLES20.glGetUniformLocation(programHandle, "u_Time")
-        positionHandle = GLES20.glGetAttribLocation(programHandle, "a_Position")
-        colorHandle = GLES20.glGetAttribLocation(programHandle, "a_Color")
-
-        // Tell OpenGL to use this program when rendering.
-        GLES20.glUseProgram(programHandle)
+        pointProgramHandle = createAndLinkProgram(
+            pointVertexShaderHandle,
+            pointFragmentShaderHandle,
+            arrayOf("a_Position")
+        )
     }
 
 
     /**
-     * Draws a triangle from the given vertex data.
-     *
-     * @param aTriangleBuffer The buffer containing the vertex data.
+     * Draws a cube
      */
-    private fun drawTriangle(aTriangleBuffer: FloatBuffer) {
+    private fun drawCube() {
         // Pass in the position information
-        aTriangleBuffer.position(mPositionOffset)
+        cubePositions.position(0)
         GLES20.glVertexAttribPointer(
             positionHandle, mPositionDataSize, GLES20.GL_FLOAT, false,
-            mStrideBytes, aTriangleBuffer
+            0, cubePositions
         )
+
         GLES20.glEnableVertexAttribArray(positionHandle)
 
         // Pass in the color information
-        aTriangleBuffer.position(mColorOffset)
+        cubeColors.position(0)
         GLES20.glVertexAttribPointer(
             colorHandle, mColorDataSize, GLES20.GL_FLOAT, false,
-            mStrideBytes, aTriangleBuffer
+            0, cubeColors
         )
+
         GLES20.glEnableVertexAttribArray(colorHandle)
+
+        // Pass in the normal information
+        cubeNormals.position(0)
+        GLES20.glVertexAttribPointer(
+            normalHandle, normalDataSize, GLES20.GL_FLOAT, false,
+            0, cubeNormals
+        )
+
+        GLES20.glEnableVertexAttribArray(normalHandle)
 
         // This multiplies the view matrix by the model matrix, and stores the result in the MVP matrix
         // (which currently contains model * view).
         Matrix.multiplyMM(mvpMatrix, 0, viewMatrix, 0, modelMatrix, 0)
 
+        // Pass in the modelview matrix.
+        GLES20.glUniformMatrix4fv(mvMatrixHandle, 1, false, mvpMatrix, 0)
+
         // This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
         // (which now contains model * view * projection).
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvpMatrix, 0)
+
+        // Pass in the combined matrix.
         GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
-        GLES20.glUniform1f(timeHandle, SystemClock.uptimeMillis().toFloat())
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3)
+
+        // Pass in the light position in eye space.
+        GLES20.glUniform3f(
+            lightPosHandle,
+            lightPosInEyeSpace[0],
+            lightPosInEyeSpace[1],
+            lightPosInEyeSpace[2]
+        )
+
+        // Draw the cube.
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36)
     }
+
+    /**
+     * Draws a point representing the position of the light.
+     */
+    private fun drawLight() {
+        val pointMVPMatrixHandle =
+            GLES20.glGetUniformLocation(pointProgramHandle, "u_MVPMatrix")
+        val pointPositionHandle = GLES20.glGetAttribLocation(pointProgramHandle, "a_Position")
+
+        // Pass in the position.
+        GLES20.glVertexAttrib3f(
+            pointPositionHandle,
+            lightPosInModelSpace[0],
+            lightPosInModelSpace[1],
+            lightPosInModelSpace[2]
+        )
+
+        // Since we are not using a buffer object, disable vertex arrays for this attribute.
+        GLES20.glDisableVertexAttribArray(pointPositionHandle)
+
+        // Pass in the transformation matrix.
+        Matrix.multiplyMM(mvpMatrix, 0, viewMatrix, 0, lightModelMatrix, 0)
+        Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvpMatrix, 0)
+        GLES20.glUniformMatrix4fv(pointMVPMatrixHandle, 1, false, mvpMatrix, 0)
+
+        // Draw the point.
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1)
+    }
+
 
     private fun loadShader(type: Int, shaderCode: String): Int {
         var handle = GLES20.glCreateShader(type)
@@ -268,5 +491,56 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         }
 
         return handle
+    }
+
+    /**
+     * Helper function to compile and link a program.
+     *
+     * @param vertexShaderHandle An OpenGL handle to an already-compiled vertex shader.
+     * @param fragmentShaderHandle An OpenGL handle to an already-compiled fragment shader.
+     * @param attributes Attributes that need to be bound to the program.
+     * @return An OpenGL handle to the program.
+     */
+    private fun createAndLinkProgram(
+        vertexShaderHandle: Int,
+        fragmentShaderHandle: Int,
+        attributes: Array<String>?
+    ): Int {
+        var programHandle = GLES20.glCreateProgram()
+        if (programHandle != 0) {
+            // Bind the vertex shader to the program.
+            GLES20.glAttachShader(programHandle, vertexShaderHandle)
+
+            // Bind the fragment shader to the program.
+            GLES20.glAttachShader(programHandle, fragmentShaderHandle)
+
+            // Bind attributes
+            if (attributes != null) {
+                val size = attributes.size
+                for (i in 0 until size) {
+                    GLES20.glBindAttribLocation(programHandle, i, attributes[i])
+                }
+            }
+
+            // Link the two shaders together into a program.
+            GLES20.glLinkProgram(programHandle)
+
+            // Get the link status.
+            val linkStatus = IntArray(1)
+            GLES20.glGetProgramiv(programHandle, GLES20.GL_LINK_STATUS, linkStatus, 0)
+
+            // If the link failed, delete the program.
+            if (linkStatus[0] == GL_FALSE) {
+                Timber.e(
+                    "Error compiling program: %s", GLES20.glGetProgramInfoLog(programHandle)
+                )
+                GLES20.glDeleteProgram(programHandle)
+                programHandle = 0
+            }
+        }
+        if (programHandle == 0) {
+            throw RuntimeException("Error creating program.")
+        }
+        return programHandle
     }
 }
