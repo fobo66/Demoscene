@@ -16,10 +16,10 @@ import javax.microedition.khronos.opengles.GL10
 
 class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
 
-    private lateinit var fragmentShader: String
-    private lateinit var vertexShader: String
-    private lateinit var pointFragmentShader: String
-    private lateinit var pointVertexShader: String
+    private var fragmentShader: String
+    private var vertexShader: String
+    private var pointFragmentShader: String
+    private var pointVertexShader: String
 
     private var colorHandle: Int = 0
     private var positionHandle: Int = 0
