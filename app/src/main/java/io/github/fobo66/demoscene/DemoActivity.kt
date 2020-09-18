@@ -5,6 +5,7 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.view.Window
 import android.view.WindowManager
+import androidx.core.view.WindowCompat
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -18,9 +19,7 @@ class DemoActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         requestWindowFeature(Window.FEATURE_NO_TITLE)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         glSurfaceView = DemoSurfaceView(this)
 
