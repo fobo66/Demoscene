@@ -60,11 +60,8 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
     private val cubeColors: FloatBuffer
     private val cubeNormals: FloatBuffer
 
-    /** How many bytes per float.  */
-    private val mBytesPerFloat = 4
-
     /** How many elements per vertex.  */
-    private val mStrideBytes = 7 * mBytesPerFloat
+    private val mStrideBytes = 7 * BYTES_PER_FLOAT
 
     /** Offset of the position data.  */
     private val mPositionOffset = 0
@@ -229,15 +226,15 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         // Initialize the buffers.
 
         // Initialize the buffers.
-        cubePositions = ByteBuffer.allocateDirect(cubePositionData.size * mBytesPerFloat)
+        cubePositions = ByteBuffer.allocateDirect(cubePositionData.size * BYTES_PER_FLOAT)
             .order(ByteOrder.nativeOrder()).asFloatBuffer()
         cubePositions.put(cubePositionData).position(0)
 
-        cubeColors = ByteBuffer.allocateDirect(cubeColorData.size * mBytesPerFloat)
+        cubeColors = ByteBuffer.allocateDirect(cubeColorData.size * BYTES_PER_FLOAT)
             .order(ByteOrder.nativeOrder()).asFloatBuffer()
         cubeColors.put(cubeColorData).position(0)
 
-        cubeNormals = ByteBuffer.allocateDirect(cubeNormalData.size * mBytesPerFloat)
+        cubeNormals = ByteBuffer.allocateDirect(cubeNormalData.size * BYTES_PER_FLOAT)
             .order(ByteOrder.nativeOrder()).asFloatBuffer()
         cubeNormals.put(cubeNormalData).position(0)
 
