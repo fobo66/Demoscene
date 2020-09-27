@@ -344,14 +344,14 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         // Load in the vertex shader.
         val vertexShaderHandle = loadShader(GLES20.GL_VERTEX_SHADER, vertexShader)
 
-        if (vertexShaderHandle == 0) {
+        if (vertexShaderHandle == GL_FALSE) {
             throw RuntimeException("Failed to create vertex shader")
         }
 
         // Load in the fragment shader.
         val fragmentShaderHandle = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
 
-        if (fragmentShaderHandle == 0) {
+        if (fragmentShaderHandle == GL_FALSE) {
             throw RuntimeException("Error creating fragment shader.")
         }
 
@@ -363,13 +363,13 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
 
         val pointVertexShaderHandle = loadShader(GLES20.GL_VERTEX_SHADER, vertexShader)
 
-        if (pointVertexShaderHandle == 0) {
+        if (pointVertexShaderHandle == GL_FALSE) {
             throw RuntimeException("Failed to create vertex shader")
         }
 
         val pointFragmentShaderHandle = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
 
-        if (pointFragmentShaderHandle == 0) {
+        if (pointFragmentShaderHandle == GL_FALSE) {
             throw RuntimeException("Error creating fragment shader.")
         }
 
@@ -470,7 +470,7 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
     private fun loadShader(type: Int, shaderCode: String): Int {
         var handle = GLES20.glCreateShader(type)
 
-        if (handle != 0) {
+        if (handle != GL_FALSE) {
             // Pass in the shader source.
             GLES20.glShaderSource(handle, shaderCode)
 
@@ -482,11 +482,11 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
             GLES20.glGetShaderiv(handle, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
 
             // If the compilation failed, delete the shader.
-            if (compileStatus[0] == 0) {
+            if (compileStatus[0] == GL_FALSE) {
                 val infoLog = GLES20.glGetShaderInfoLog(handle)
                 Timber.e("Failed to compile shader. Info log: %s", infoLog)
                 GLES20.glDeleteShader(handle)
-                handle = 0
+                handle = GL_FALSE
             }
         }
 
@@ -507,7 +507,7 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
         attributes: Array<String>?
     ): Int {
         var programHandle = GLES20.glCreateProgram()
-        if (programHandle != 0) {
+        if (programHandle != GL_FALSE) {
             // Bind the vertex shader to the program.
             GLES20.glAttachShader(programHandle, vertexShaderHandle)
 
@@ -535,10 +535,10 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
                     "Error compiling program: %s", GLES20.glGetProgramInfoLog(programHandle)
                 )
                 GLES20.glDeleteProgram(programHandle)
-                programHandle = 0
+                programHandle = GL_FALSE
             }
         }
-        if (programHandle == 0) {
+        if (programHandle == GL_FALSE) {
             throw RuntimeException("Error creating program.")
         }
         return programHandle
