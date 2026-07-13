@@ -3,9 +3,9 @@ package io.github.fobo66.demoscene
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.fobo66.demoscene.ui.theme.DemosceneTheme
@@ -15,8 +15,7 @@ class ComposeDemoActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             DemosceneTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(color = MaterialTheme.colors.background) {
+                Surface(color = MaterialTheme.colorScheme.background) {
                     Greeting("Android")
                 }
             }

@@ -6,7 +6,8 @@ import android.opengl.GLES20.GL_FALSE
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
-import timber.log.Timber
+import co.touchlab.kermit.Logger
+import dev.fobo66.andgopher.R
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -481,7 +482,9 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
             // If the compilation failed, delete the shader.
             if (compileStatus[0] == GL_FALSE) {
                 val infoLog = GLES20.glGetShaderInfoLog(handle)
-                Timber.e("Failed to compile shader. Info log: %s", infoLog)
+                Logger.e {
+                    "Failed to compile shader. Info log: $infoLog"
+                }
                 GLES20.glDeleteShader(handle)
                 handle = GL_FALSE
             }
@@ -528,15 +531,15 @@ class DemoGLRenderer(resources: Resources) : GLSurfaceView.Renderer {
 
             // If the link failed, delete the program.
             if (linkStatus[0] == GL_FALSE) {
-                Timber.e(
-                    "Error compiling program: %s", GLES20.glGetProgramInfoLog(programHandle)
-                )
+                Logger.e {
+                    "Error compiling program: ${GLES20.glGetProgramInfoLog(programHandle)}"
+                }
                 GLES20.glDeleteProgram(programHandle)
                 programHandle = GL_FALSE
             }
         }
-        if (programHandle == GL_FALSE) {
-            throw RuntimeException("Error creating program.")
+        check(programHandle != GL_FALSE) {
+            "Error creating program."
         }
         return programHandle
     }

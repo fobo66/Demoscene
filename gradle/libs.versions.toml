@@ -1,0 +1,66 @@
+[versions]
+activity-compose = "1.13.0"
+agp = "9.4.0-alpha04"
+androidx-test-ext-junit = "1.3.0"
+assertk = "0.28.1"
+coil = "2.7.0"
+compose = "1.12.0-beta02"
+composeAdaptive = "1.3.0-rc01"
+composeMaterial = "1.5.0-alpha23"
+core-ktx = "1.19.0"
+core-splashscreen = "1.2.0"
+coroutines = "1.11.0"
+detekt = "2.0.0-alpha.5"
+espresso-core = "3.7.0"
+kermit = "2.1.0"
+koin = "4.2.2"
+kotlin = "2.4.0"
+kotlinter = "5.6.0"
+kotlinxCollections = "0.5.1"
+kotlinxTime = "0.8.0"
+ksp = "2.3.10"
+lifecycle-runtime-ktx = "2.11.0"
+navigation = "1.2.0-alpha05"
+
+[libraries]
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
+assertk = { group = "com.willowtreeapps.assertk", name = "assertk", version.ref = "assertk" }
+coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+collections = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollections" }
+compose-stable-marker = { group = "androidx.compose.runtime", name = "runtime-annotation", version.ref = "compose" }
+core-ktx = { group = "androidx.core", name = "core", version.ref = "core-ktx" }
+core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "core-splashscreen" }
+coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+kermit = { group = "co.touchlab", name = "kermit", version.ref = "kermit" }
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+koin-compose = { group = "io.insert-koin", name = "koin-compose", version.ref = "koin" }
+koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
+koin-test = { group = "io.insert-koin", name = "koin-test-junit5", version.ref = "koin" }
+koin-viewmodel = { group = "io.insert-koin", name = "koin-compose-viewmodel", version.ref = "koin" }
+koin-navigation = { group = "io.insert-koin", name = "koin-compose-navigation3", version.ref = "koin" }
+kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test-junit", version.ref = "kotlin" }
+lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime-ktx" }
+lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle-runtime-ktx" }
+lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle-runtime-ktx" }
+material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "composeMaterial" }
+material3-adaptive = { group = "androidx.compose.material3.adaptive", name = "adaptive", version.ref = "composeAdaptive" }
+material3-adaptive-layout = { group = "androidx.compose.material3.adaptive", name = "adaptive-layout", version.ref = "composeAdaptive" }
+material3-adaptive-navigation = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "composeAdaptive" }
+time = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxTime" }
+ui = { group = "androidx.compose.ui", name = "ui", version.ref = "compose" }
+ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "compose" }
+ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "compose" }
+ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "compose" }
+ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "compose" }
+ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "compose" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+composePlugin = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
