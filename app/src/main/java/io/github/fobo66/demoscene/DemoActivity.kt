@@ -1,31 +1,27 @@
 package io.github.fobo66.demoscene
 
-import android.opengl.GLSurfaceView
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.enableEdgeToEdge
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import com.google.androidgamesdk.GameActivity
 
-class DemoActivity : ComponentActivity() {
-
-    private lateinit var glSurfaceView: GLSurfaceView
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        enableEdgeToEdge()
-
-        glSurfaceView = DemoSurfaceView(this)
-
-        setContentView(glSurfaceView)
+class DemoActivity : GameActivity() {
+    companion object {
+        init {
+            System.loadLibrary("demoscene")
+        }
     }
 
-    override fun onStart() {
-        super.onStart()
-        glSurfaceView.onResume()
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemUi()
+        }
     }
 
-    override fun onStop() {
-        super.onStop()
-        glSurfaceView.onPause()
+    private fun hideSystemUi() {
+        window.insetsController?.apply {
+            hide(WindowInsets.Type.systemBars())
+            systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
     }
 }

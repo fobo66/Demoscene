@@ -58,8 +58,6 @@ bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent) {
  * This the main entry point for a native activity
  */
 void android_main(struct android_app *pApp) {
-    // Can be removed, useful to ensure your code is running
-    aout << "Welcome to android_main" << std::endl;
 
     // Register an event handler for Android events
     pApp->onAppCmd = handle_cmd;

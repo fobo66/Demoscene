@@ -88,6 +88,7 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.games.activity)
     implementation(libs.core.ktx)
     implementation(libs.core.splashscreen)
